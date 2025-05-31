@@ -8,3 +8,13 @@ uvicorn # For potential API
 aiohttp # For async http calls
 pytest # For testing
 pytest-asyncio # For testing async code
+
+# For Vector DB
+pinecone-client~=3.0
+# For Embedding Generation
+sentence-transformers~=2.2.2
+torch~=2.0.0 # Often a dependency for sentence-transformers, ensure it's there
+
+# For Web API
+fastapi~=0.104.1
+uvicorn[standard]~=0.23.2

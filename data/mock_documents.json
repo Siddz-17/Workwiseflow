@@ -1,0 +1,37 @@
+[
+    {
+        "id": "doc_001",
+        "title": "Project Phoenix Overview",
+        "content": "Project Phoenix is a next-generation initiative focused on leveraging AI to enhance customer engagement. It involves cross-functional teams from engineering, marketing, and sales, aiming for a Q4 launch. Key deliverables include a new AI-powered chatbot, a personalized recommendation engine, and an advanced analytics dashboard. The project follows an agile methodology with bi-weekly sprints.",
+        "source": "Confluence",
+        "type": "Strategic Plan"
+    },
+    {
+        "id": "doc_002",
+        "title": "Q3 Marketing Strategy",
+        "content": "Our Q3 marketing strategy emphasizes digital channels, primarily focusing on SEO optimization, targeted content marketing through our blog and social media, and influencer collaborations within our niche. Key performance indicators (KPIs) include a 20% increase in organic website traffic, a 15% rise in lead generation through content downloads, and a 5% improvement in overall conversion rates. We will also experiment with short-form video content.",
+        "source": "SharePoint",
+        "type": "Marketing Plan"
+    },
+    {
+        "id": "doc_003",
+        "title": "Onboarding Guide for New Hires",
+        "content": "This comprehensive guide provides essential information for new hires joining WorkflowWise. It covers company history, mission, vision, and values, detailed explanations of our core products and services, an overview of company policies (including code of conduct, data security, and remote work), team structures and key contacts, and available resources for professional development. Please complete the mandatory training modules and compliance checklist within your first week of joining.",
+        "source": "HR Portal",
+        "type": "HR Document"
+    },
+    {
+        "id": "doc_004",
+        "title": "Engineering Best Practices",
+        "content": "This document outlines the mandatory software engineering best practices at WorkflowWise. It includes guidelines for version control using Git (branching strategies, commit message standards), mandatory code reviews for all pull requests, comprehensive testing methodologies (unit, integration, and end-to-end tests), CI/CD pipeline usage, secure coding practices (OWASP Top 10), and standardized deployment procedures. Adherence to these practices is crucial for maintaining code quality and system stability.",
+        "source": "Dev Wiki",
+        "type": "Technical Standard"
+    },
+    {
+        "id": "doc_005",
+        "title": "Customer Support Handbook",
+        "content": "The customer support handbook details procedures for handling various types of customer inquiries, from simple information requests to complex technical troubleshooting. It outlines ticket prioritization, escalation paths for unresolved issues, communication etiquette, and best practices for ensuring customer satisfaction. Empathy, clear communication, and timely responses are paramount. The handbook also includes templates for common responses and links to internal knowledge bases.",
+        "source": "Support System",
+        "type": "Operational Guide"
+    }
+]

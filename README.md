@@ -105,3 +105,51 @@ pytest.ini                  # Pytest configuration
 
 ## Contributing
 (Details to be added as the project matures.)
+
+## API Usage
+
+### Running the API Server
+
+1.  **Set Environment Variables:**
+    The API (and CLI) requires Pinecone credentials. Ensure these are set:
+    ```bash
+    export PINECONE_API_KEY="YOUR_PINECONE_API_KEY"
+    export PINECONE_ENVIRONMENT="YOUR_PINECONE_ENVIRONMENT" # e.g., gcp-starter, or your pod environment
+    # For serverless Pinecone indexes, you might also need to configure (see pinecone_db.py):
+    # export USE_SERVERLESS_INDEX="true" # or "false" (default)
+    # export PINECONE_CLOUD="your_cloud_provider" # e.g., aws, gcp, azure
+    # export PINECONE_REGION="your_pinecone_region" # e.g., us-west-2
+    ```
+
+2.  **Start the Uvicorn Server:**
+    From the project root directory:
+    ```bash
+    uvicorn workflowwise.api.main:app --reload
+    ```
+    The API will typically be available at `http://localhost:8000`.
+
+### API Endpoints
+
+-   **POST `/api/search`**: Performs a search.
+    -   **Request Body (JSON):**
+        ```json
+        {
+          "query": "your search query",
+          "top_k": 3, // Optional, default is 3
+          "session_id": "optional_session_id_string" // Optional
+        }
+        ```
+    -   **Response (JSON):** Contains search results including document ID, title, score, snippet, etc.
+-   **GET `/docs`**: Access Swagger UI for interactive API documentation.
+-   **GET `/redoc`**: Access ReDoc documentation.
+
+## Basic Web User Interface
+
+A proof-of-concept HTML interface is available to interact with the search API.
+
+1.  **Ensure the API server is running (see above).**
+2.  **Open your web browser and navigate to:**
+    ```
+    http://localhost:8000/
+    ```
+    This page provides a search box to query the system.
