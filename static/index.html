@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WorkflowWise Search</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; background-color: #f4f4f4; }
+        .container { max-width: 800px; margin: auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #333; text-align: center; }
+        .search-box { display: flex; margin-bottom: 20px; }
+        #searchQuery { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px 0 0 4px; }
+        #searchButton { padding: 10px 15px; background-color: #007bff; color: white; border: none; cursor: pointer; border-radius: 0 4px 4px 0; }
+        #searchButton:hover { background-color: #0056b3; }
+        .results { margin-top: 20px; }
+        .result-item { border: 1px solid #eee; padding: 15px; margin-bottom: 10px; border-radius: 4px; background-color: #f9f9f9; }
+        .result-item h3 { margin-top: 0; color: #0056b3; }
+        .result-item p { margin-bottom: 5px; font-size: 0.9em; }
+        .result-item .score { font-size: 0.8em; color: #555; }
+        .result-item .source { font-size: 0.8em; color: #777; font-style: italic; }
+        .error { color: red; margin-top: 10px; }
+        .loading { text-align: center; margin-top: 10px; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>WorkflowWise Search</h1>
+        <div class="search-box">
+            <input type="text" id="searchQuery" placeholder="Enter your search query...">
+            <button id="searchButton">Search</button>
+        </div>
+        <div id="loadingIndicator" class="loading" style="display: none;">Loading...</div>
+        <div id="results" class="results"></div>
+        <div id="error" class="error"></div>
+    </div>
+
+    <script>
+        const queryInput = document.getElementById('searchQuery');
+        const searchButton = document.getElementById('searchButton');
+        const resultsDiv = document.getElementById('results');
+        const errorDiv = document.getElementById('error');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        searchButton.addEventListener('click', performSearch);
+        queryInput.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        });
+
+        async function performSearch() {
+            const query = queryInput.value.trim();
+            if (!query) {
+                errorDiv.textContent = 'Please enter a search query.';
+                resultsDiv.innerHTML = ''; // Clear previous results
+                return;
+            }
+
+            errorDiv.textContent = ''; // Clear previous errors
+            resultsDiv.innerHTML = ''; // Clear previous results
+            loadingIndicator.style.display = 'block'; // Show loading indicator
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ query: query, top_k: 5 }) // Requesting top 5 results
+                });
+
+                loadingIndicator.style.display = 'none'; // Hide loading indicator
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ detail: 'Unknown server error' }));
+                    throw new Error(errorData.detail || `Server error: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.results && data.results.length > 0) {
+                    displayResults(data.results);
+                } else {
+                    resultsDiv.innerHTML = '<p>No results found.</p>';
+                }
+
+            } catch (err) {
+                loadingIndicator.style.display = 'none'; // Hide loading indicator
+                console.error('Search error:', err);
+                errorDiv.textContent = 'Error performing search: ' + err.message;
+            }
+        }
+
+        function displayResults(results) {
+            resultsDiv.innerHTML = ''; // Clear previous results
+            results.forEach(item => {
+                const resultItemDiv = document.createElement('div');
+                resultItemDiv.className = 'result-item';
+
+                const title = document.createElement('h3');
+                title.textContent = item.title || 'No Title';
+                resultItemDiv.appendChild(title);
+
+                if (item.score) {
+                    const score = document.createElement('p');
+                    score.className = 'score';
+                    score.textContent = `Relevance Score: ${item.score.toFixed(4)}`;
+                    resultItemDiv.appendChild(score);
+                }
+
+                if (item.source) {
+                    const source = document.createElement('p');
+                    source.className = 'source';
+                    source.textContent = `Source: ${item.source}`;
+                    resultItemDiv.appendChild(source);
+                }
+
+                if (item.content_snippet) {
+                    const snippet = document.createElement('p');
+                    snippet.textContent = item.content_snippet;
+                    resultItemDiv.appendChild(snippet);
+                }
+
+                // Optionally display full_content_preview if needed
+                // if (item.full_content_preview) {
+                //     const preview = document.createElement('p');
+                //     preview.textContent = "Preview: " + item.full_content_preview;
+                //     resultItemDiv.appendChild(preview);
+                // }
+
+                resultsDiv.appendChild(resultItemDiv);
+            });
+        }
+    </script>
+</body>
+</html>
