@@ -1,0 +1,10 @@
+# Vector Database Libraries (choose one or more)
+# pinecone-client
+# weaviate-client
+# qdrant-client
+# sentence-transformers # For generating embeddings
+fastapi # For potential API
+uvicorn # For potential API
+aiohttp # For async http calls
+pytest # For testing
+pytest-asyncio # For testing async code
