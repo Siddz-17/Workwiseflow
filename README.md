@@ -36,7 +36,7 @@ supabase/   SQL migration (tables, HNSW indexes, RLS, storage bucket)
 | Embeddings | **Gemini** `gemini-embedding-001` at 768 dims, or an offline hashing embedder |
 | LLM | **Gemini Flash** behind a provider interface (`app/services/llm.py`). An offline heuristic provider implements the same tasks, so the app works with no key, and Gemini failures fall back to it. |
 | Jobs | **Redis + RQ** when `REDIS_URL` is set, otherwise FastAPI background tasks |
-| Deploy | **Vercel** (frontend) + **Render** (API, worker, Redis; see `render.yaml`) |
+| Deploy | **Vercel** (frontend) + **Render** (API; optional RQ worker + Redis), see [DEPLOY.md](DEPLOY.md) |
 | Tests | **Pytest** (backend) + **Vitest** (frontend) |
 
 Every API route is scoped `/api/workspaces/{ws}/…`. Every query filters on `workspace_id`, and every route checks
@@ -72,13 +72,7 @@ changes the vector space, so reprocess documents afterwards.
 
 ## Production setup
 
-1. **Supabase**: create a project, then run `supabase/migrations/0001_init.sql` in the SQL editor (or `supabase db push`).
-   This creates the tables, pgvector HNSW indexes, RLS policies and the private `documents` bucket.
-2. **Render**: create a Blueprint from `render.yaml`. Set `DATABASE_URL` (Supabase pooler string), `SUPABASE_URL`,
-   `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY` and `CORS_ORIGINS` (your Vercel URL).
-3. **Vercel**: import the repo with root directory `frontend`. Set `NEXT_PUBLIC_API_URL` (Render URL),
-   `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. In Supabase Auth → URL configuration, add the
-   Vercel domain as the site URL and redirect URL.
+Step-by-step guide: **[DEPLOY.md](DEPLOY.md)** (Supabase + Render free web service + Vercel, about 20 minutes).
 
 The migration is generated from the models, so after changing `backend/app/models.py` run
 `python backend/scripts/dump_schema.py`. RLS lives in `supabase/policies.sql`.

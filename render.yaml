@@ -1,13 +1,20 @@
-# Render Blueprint: FastAPI backend + RQ worker + Redis. The frontend deploys to Vercel (see README).
+# Render Blueprint for the WorkflowWise API. The frontend deploys to Vercel and the database, auth and file
+# storage live in Supabase (see DEPLOY.md).
+#
+# Free tier: one web service. Ingestion runs in-process after each upload (REDIS_URL unset).
+# For a dedicated RQ worker, see "Optional: background worker" in DEPLOY.md (Render workers are a paid plan).
 services:
   - type: web
     name: workflowwise-api
     runtime: python
+    plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.10
       - key: APP_ENV
         value: production
       - key: AUTH_MODE
@@ -16,48 +23,18 @@ services:
         value: supabase
       - key: AUTO_CREATE_TABLES
         value: "false"
+      - key: LLM_PROVIDER
+        value: auto
+      - key: EMBEDDING_PROVIDER
+        value: auto
+      # Set these in the Render dashboard (they are secrets or depend on your projects).
       - key: DATABASE_URL
         sync: false
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: GEMINI_API_KEY
         sync: false
       - key: CORS_ORIGINS
         sync: false
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: workflowwise-redis
-          property: connectionString
-
-  - type: worker
-    name: workflowwise-worker
-    runtime: python
-    rootDir: backend
-    buildCommand: pip install -r requirements.txt
-    startCommand: python worker.py
-    envVars:
-      - key: APP_ENV
-        value: production
-      - key: STORAGE_BACKEND
-        value: supabase
-      - key: DATABASE_URL
+      - key: CORS_ORIGIN_REGEX
         sync: false
-      - key: SUPABASE_URL
-        sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
-        sync: false
-      - key: GEMINI_API_KEY
-        sync: false
-      - key: REDIS_URL
-        fromService:
-          type: keyvalue
-          name: workflowwise-redis
-          property: connectionString
-
-  - type: keyvalue
-    name: workflowwise-redis
-    ipAllowList: []
-    plan: free

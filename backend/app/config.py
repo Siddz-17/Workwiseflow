@@ -39,6 +39,8 @@ class Settings(BaseSettings):
     redis_url: str | None = None
 
     cors_origins: str = "http://localhost:3000"
+    # Optional regex for extra allowed origins, e.g. Vercel previews: ^https://workflowwise-.*\.vercel\.app$
+    cors_origin_regex: str | None = None
     stale_after_days: int = 120
     answer_min_score: float = 0.2
     max_upload_mb: int = 25
