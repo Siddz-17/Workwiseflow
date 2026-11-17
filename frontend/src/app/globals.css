@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+/* WorkflowWise — brutalist desktop workspace.
+   Paper + ink, one acid highlight, hard edges, hard shadows, visible structure. */
+
+:root {
+  --paper: #f3f0e8;
+  --paper-2: #e9e5da;
+  --ink: #0b0b0b;
+  --muted: #5a5750;
+  --acid: #d7ff3a;
+  --signal: #ff4a1c;
+  --cobalt: #1f3cff;
+  --ok: #0f8a4a;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-2: var(--paper-2);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-acid: var(--acid);
+  --color-signal: var(--signal);
+  --color-cobalt: var(--cobalt);
+  --color-ok: var(--ok);
+
+  --color-background: var(--paper);
+  --color-foreground: var(--ink);
+  --color-border: var(--ink);
+  --color-ring: var(--cobalt);
+
+  --font-display: var(--font-archivo-black), "Arial Black", Impact, sans-serif;
+  --font-sans: var(--font-space-grotesk), "Helvetica Neue", Arial, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, Menlo, monospace;
+
+  --radius: 0px;
+  --shadow-hard: 4px 4px 0 0 var(--ink);
+  --shadow-hard-lg: 8px 8px 0 0 var(--ink);
+  --shadow-hard-sm: 2px 2px 0 0 var(--ink);
+}
+
+* {
+  border-color: var(--ink);
+}
+
+html,
+body {
+  background: var(--paper);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--acid);
+  color: var(--ink);
+}
+
+/* Faint blueprint grid behind content areas */
+.grid-bg {
+  background-image:
+    linear-gradient(to right, rgb(11 11 11 / 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(11 11 11 / 0.06) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+.label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.display {
+  font-family: var(--font-display);
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.92;
+}
+
+.prose-answer p + p,
+.prose-answer ul + p,
+.prose-answer p + ul {
+  margin-top: 0.75rem;
+}
+
+.prose-answer ul {
+  list-style: square;
+  padding-left: 1.25rem;
+}
+
+.prose-answer li + li {
+  margin-top: 0.35rem;
+}
+
+:target,
+.chunk-highlight {
+  background: var(--acid);
+  outline: 2px solid var(--ink);
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.cursor-blink {
+  animation: blink 1s steps(1) infinite;
+}

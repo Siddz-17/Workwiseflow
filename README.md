@@ -1,107 +1,106 @@
-# WorkflowWise
+# WorkflowWise — your team's institutional memory
 
-WorkflowWise is an intelligent enterprise knowledge orchestrator. This project aims to leverage agentic AI, MCP (Multi-Component Protocol) servers, and vector databases to address knowledge fragmentation in hybrid workplaces.
+An AI workspace that remembers what your team knows, what it decided, and what needs to happen next.
 
-**Core Problem:** Employees often waste significant time searching for information across disconnected systems like Confluence, SharePoint, Slack, and project management tools.
+Decisions happen in meetings, answers get buried in chat, requirements live in five versions of a PDF, and nobody
+remembers who owned the task. WorkflowWise turns documents, meeting notes and project records into a searchable,
+cited memory, and keeps track of decisions, commitments and the gaps between them.
 
-**Vision:** WorkflowWise will provide a unified interface to enterprise knowledge, featuring:
-- Semantic search capabilities.
-- Persistent contextual memory across user sessions.
-- Proactive knowledge gap identification and suggestions.
-- Secure federated search with role-based access control.
-- Multi-modal knowledge processing (text, recordings, presentations, code).
+## Features
 
-## Current Status
+| # | Feature | What it does |
+|---|---------|--------------|
+| 01 | **Ask your workspace** | RAG over documents, meeting notes and records. Every claim carries a `[n]` citation that opens the source at the exact passage. Threads persist per user. Follow-ups use the previous question as context. |
+| 02 | **Meeting intelligence** | Upload a transcript (`.txt .md .vtt .srt .docx .pdf`) or paste notes. Extracts summary, attendees, decisions (with rationale and approver), action items (owner, deadline resolved from "by Friday" against the meeting date) and open questions. Owners are matched to workspace members. |
+| 03 | **Decision tracker** | Keyword and semantic search; status `active / proposed / superseded / revoked`; "replaced by" chains; "still valid" re-confirmation; link back to the source meeting and quote. |
+| 04 | **Action items** | Views for incomplete, overdue, no owner, mine and done. Assign owners, set due dates, advance status inline. |
+| 05 | **Knowledge gaps** | *Unanswered questions*: questions Ask couldn't answer (deduplicated, counted) plus open questions from meetings. Answering one saves it to the knowledge base. *Outdated documents*: superseded versions and documents not updated or verified in `STALE_AFTER_DAYS`. *Conflicts*: similar decisions or passages that contradict each other, judged by the LLM. |
+| 06 | **Team workspace** | Multiple workspaces, projects, email invites (auto-claimed on first sign-in), roles `viewer < member < admin < owner`, project-scoped search, persistent chat history. |
 
-This repository contains the initial framework and foundational components of WorkflowWise. This includes:
-- Basic directory structure.
-- Core abstract base classes for Agents, MCP Servers, and Vector DB interface.
-- Initial agent implementations:
-    - `QueryUnderstandingAgent`: For basic query parsing and intent detection.
-    - `ContextOrchestrationAgent`: For managing session context.
-- Stub implementations for MCP Servers:
-    - `DocumentManagementMCPServer`: Simulates connection to document systems (e.g., Confluence, SharePoint).
-    - `CommunicationMCPServer`: Simulates connection to communication platforms (e.g., Slack, Teams).
-- A mock Vector Database interface for simulated semantic search.
-- A basic Command Line Interface (CLI) (`workflowwise/cli.py`) to demonstrate the initial search workflow.
-- Initial unit and integration tests using `pytest`.
+Re-uploading a document with the same title in the same project creates **v2** and marks v1 superseded, so answers
+come from the latest version.
 
-## Project Structure
+## Architecture
 
 ```
-workflowwise/
-├── agents/                 # AI Agent implementations
-│   ├── __init__.py
-│   ├── base_agent.py
-│   ├── query_understanding_agent.py
-│   └── context_orchestration_agent.py
-├── mcp_servers/            # MCP Server implementations (stubs for now)
-│   ├── __init__.py
-│   ├── base_mcp_server.py
-│   ├── communication_mcp_server.py
-│   └── document_management_mcp_server.py
-├── vector_db/              # Vector database interaction logic
-│   ├── __init__.py
-│   └── vector_db_interface.py
-├── data_models/            # Data structures and Pydantic models
-│   ├── __init__.py
-│   └── knowledge_item.py
-├── tests/                  # Unit and integration tests
-│   ├── __init__.py
-│   ├── agents/
-│   └── mcp_servers/
-│   └── test_cli_workflow.py
-├── cli.py                  # Main CLI application runner
-├── __main__.py             # Allows running CLI with 'python -m workflowwise'
-└── requirements.txt        # Python dependencies
-docs/                       # Project documentation (future)
-README.md                   # This file
-pytest.ini                  # Pytest configuration
-.git/                       # Git repository data
+frontend/   Next.js 16 · TypeScript · Tailwind v4 · shadcn/ui-style components · SWR · Supabase Auth
+backend/    FastAPI · SQLAlchemy 2 · pgvector · PyMuPDF · python-docx · Redis + RQ
+supabase/   SQL migration (tables, HNSW indexes, RLS, storage bucket)
 ```
 
-## Setup and Running
+| Layer | Choice |
+|---|---|
+| Database | Supabase Postgres + **pgvector** (SQLite locally and in tests) |
+| Auth | **Supabase Auth**: the frontend signs in, the API verifies the JWT (JWKS, or legacy HS256 secret) |
+| Files | **Supabase Storage** private bucket (local disk in dev); downloads go through the API's membership check |
+| Embeddings | **Gemini** `gemini-embedding-001` at 768 dims, or an offline hashing embedder |
+| LLM | **Gemini Flash** behind a provider interface (`app/services/llm.py`). An offline heuristic provider implements the same tasks, so the app works with no key, and Gemini failures fall back to it. |
+| Jobs | **Redis + RQ** when `REDIS_URL` is set, otherwise FastAPI background tasks |
+| Deploy | **Vercel** (frontend) + **Render** (API, worker, Redis; see `render.yaml`) |
+| Tests | **Pytest** (backend) + **Vitest** (frontend) |
 
-1.  **Clone the repository (if you haven't already):**
-    ```bash
-    # git clone <repository_url>
-    # cd workflowwise_project_root
-    ```
+Every API route is scoped `/api/workspaces/{ws}/…`. Every query filters on `workspace_id`, and every route checks
+the caller's role. RLS policies in the migration add defense in depth for anyone querying Supabase directly.
 
-2.  **Create a virtual environment and activate it (recommended):**
-    ```bash
-    python -m venv .venv
-    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-    ```
+## Run locally (no accounts needed)
 
-3.  **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-    ```
-    *(Note: `requirements.txt` currently lists `pytest` and `pytest-asyncio` for testing, and `fastapi`/`uvicorn`/`aiohttp` as placeholders for potential future API/async needs. Specific vector DB clients like `pinecone-client` or `weaviate-client` are commented out and should be chosen and uncommented as needed.)*
+Prerequisites: Python 3.11+ and Node 20+.
 
-4.  **Run the CLI:**
-    From the project root directory:
-    ```bash
-    python -m workflowwise
-    ```
-    This will start the interactive command-line interface. Type your queries and type 'exit' to quit.
+```powershell
+cd backend
+python -m venv .venv
+.venv\Scripts\activate            # macOS/Linux: source .venv/bin/activate
+pip install -r requirements-dev.txt
+copy .env.example .env            # macOS/Linux: cp .env.example .env
+python scripts/seed_demo.py demo@northwind.test   # optional demo workspace
+uvicorn app.main:app --reload --port 8000
+```
 
-5.  **Run tests:**
-    From the project root directory:
-    ```bash
-    pytest
-    ```
+```powershell
+cd frontend
+npm install
+copy .env.example .env.local
+npm run dev
+```
 
-## Next Steps & Future Development
+Open http://localhost:3000 and sign in with any email. With `NEXT_PUBLIC_SUPABASE_URL` unset, the frontend uses dev
+sign-in and the backend (`AUTH_MODE=dev`) accepts it. Use `demo@northwind.test` to see the seeded workspace.
 
-- Integrate a real Vector Database (e.g., Pinecone, Weaviate, Qdrant).
-- Implement embedding generation for documents and queries.
-- Develop more sophisticated AI agents (Security & Compliance, Learning Agent).
-- Build out MCP server connectors for actual enterprise systems.
-- Design and implement a user interface (Web UI or more advanced CLI).
-- Expand multi-modal data processing capabilities.
-- Implement robust error handling, logging, and monitoring.
+Add `GEMINI_API_KEY` to `backend/.env` for real semantic search, answers and extraction. The offline providers are
+deterministic and keyword-based, good for development but not for production. Switching embedding providers
+changes the vector space, so reprocess documents afterwards.
 
-## Contributing
-(Details to be added as the project matures.)
+## Production setup
+
+1. **Supabase**: create a project, then run `supabase/migrations/0001_init.sql` in the SQL editor (or `supabase db push`).
+   This creates the tables, pgvector HNSW indexes, RLS policies and the private `documents` bucket.
+2. **Render**: create a Blueprint from `render.yaml`. Set `DATABASE_URL` (Supabase pooler string), `SUPABASE_URL`,
+   `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY` and `CORS_ORIGINS` (your Vercel URL).
+3. **Vercel**: import the repo with root directory `frontend`. Set `NEXT_PUBLIC_API_URL` (Render URL),
+   `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`. In Supabase Auth → URL configuration, add the
+   Vercel domain as the site URL and redirect URL.
+
+The migration is generated from the models, so after changing `backend/app/models.py` run
+`python backend/scripts/dump_schema.py`. RLS lives in `supabase/policies.sql`.
+
+## Tests
+
+```powershell
+cd backend; python -m pytest       # API, roles, isolation, ingestion (txt/pdf/docx), RAG, extraction, gaps
+cd frontend; npm test              # citation parsing, date logic, UI primitives
+cd frontend; npm run build
+```
+
+## API overview
+
+| Area | Endpoints |
+|---|---|
+| Me / workspaces | `GET /api/me`, `POST/GET/PATCH/DELETE /api/workspaces[/{ws}]`, `GET /api/workspaces/{ws}/overview` |
+| Team | `GET members`, `PATCH/DELETE members/{user}`, `POST/GET/DELETE invites`, `GET/POST/PATCH/DELETE projects` |
+| Documents | `GET/POST documents`, `POST documents/text`, `GET documents/{id}`, `GET …/file`, `PATCH`, `POST …/reprocess`, `DELETE` |
+| Ask | `POST chat/ask`, `GET chat/threads`, `GET/DELETE chat/threads/{id}` |
+| Meetings | `GET/POST meetings`, `GET/DELETE meetings/{id}`, `POST …/reprocess` |
+| Decisions / actions | `GET/POST/PATCH/DELETE decisions`, `GET/POST/PATCH/DELETE actions` (`?overdue&unassigned&mine&status=incomplete`) |
+| Gaps | `GET gaps`, `POST gaps/scan`, `PATCH conflicts/{id}`, `PATCH questions/{id}`, `POST documents/{id}/verify` |
+
+Interactive docs: http://localhost:8000/docs
